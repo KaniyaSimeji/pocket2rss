@@ -1,0 +1,10 @@
+name = "pocket2rss"
+compatibility_date = "2023-12-01"
+node_compat = true
+
+[vars]
+HOST = "<YOUR WORKERS URL>"
+
+[[kv_namespaces]]
+binding = "<YOUR KV BINDING NAME>"
+id = "<YOUR KV ID>"
