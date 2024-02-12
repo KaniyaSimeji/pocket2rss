@@ -31,7 +31,7 @@ export const PocketGetRequestSchema = z.object({
     detailType: z.enum(["simple", "complete"]).optional(),
     search: z.string().url().or(z.string()).optional(),
     domain: z.string().url().optional(),
-    since: z.string().describe("unixtime").optional(),
+    since: z.number().describe("unixtime").optional(),
     count: z.number().positive().optional(),
     offset: z.number().positive().optional()
 })
@@ -48,10 +48,10 @@ export const PocketGetResponseSchema = z.object({
         given_title: z.string(),
         favorite: z.nativeEnum(PocketFavoriteKind),
         status: z.number(),
-        time_added: z.string().describe("unixtime"),
-        time_updated: z.string().describe("unixtime"),
-        time_read: z.string().describe("unixtime"),
-        time_favorited: z.string().describe("unixtime"),
+        time_added: z.number().describe("unixtime"),
+        time_updated: z.number().describe("unixtime"),
+        time_read: z.number().describe("unixtime"),
+        time_favorited: z.number().describe("unixtime"),
         sort_id: z.number(),
         resolved_title: z.string(),
         resolved_url: z.string().url(),

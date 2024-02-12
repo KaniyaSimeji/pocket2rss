@@ -77,7 +77,7 @@ app.get("/rss", async (c) => {
     values.forEach((v) => {
         feed.addItem({
             title: v.resolved_title,
-            date: new Date(v.time_updated),
+            date: new Date(v.time_updated * 1000), // javascript datetime is ms,so you have to times 1000
             link: v.resolved_url,
             id: v.resolved_id,
         })
