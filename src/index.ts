@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { Bindings } from './bindings'
 import * as uuid from "uuid";
 import { Feed } from 'feed';
+import { AuthResponse, CallbackAuthResponse, PocketGetResponse } from './schema';
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -9,7 +10,7 @@ app.get('/', (c) => {
     return c.text('Hello Pocket2Rss!')
 })
 
-app.get("/auth", async (c) => {
+app.get("/signin", async (c) => {
     const state = uuid.v4();
     const res = await fetch("https://getpocket.com/v3/oauth/request", {
         method: "POST",
@@ -19,21 +20,19 @@ app.get("/auth", async (c) => {
         },
         body: JSON.stringify({
             consumer_key: c.env.POCKET_KEY,
-            redirect_uri: c.env.HOST + "/signin",
+            redirect_uri: c.env.HOST + "/callback",
             state: state
         })
     })
-    const j = await res.json();
+    const j: AuthResponse = await res.json();
     const code = j.code;
     await c.env.STORE_KV.put("state", code);
-    return c.redirect(`https://getpocket.com/auth/authorize?request_token=${code}&redirect_uri=${c.env.HOST + "/signin"}`, 302)
-
-
+    return c.redirect(`https://getpocket.com/auth/authorize?request_token=${code}&redirect_uri=${c.env.HOST + "/callback"}`, 302)
 })
 
-app.get("/signin", async (c) => {
+app.get("/callback", async (c) => {
     const code = await c.env.STORE_KV.get("state")
-    const access_token = await fetch("https://getpocket.com/v3/oauth/authorize", {
+    const res = await fetch("https://getpocket.com/v3/oauth/authorize", {
         method: "POST",
         headers: {
             "Content-Type": "application/json; charset=UTF-8",
@@ -44,9 +43,7 @@ app.get("/signin", async (c) => {
             code: code
         })
     })
-    console.log(access_token)
-    const token = await access_token.json()
-    console.log(token)
+    const token: CallbackAuthResponse = await res.json()
     c.env.STORE_KV.put("token", token.access_token)
     return c.json({ status: "secsess" })
 })
@@ -67,8 +64,7 @@ app.get("/rss", async (c) => {
         })
     })
 
-    const json = await data.json()
-    const list = json.list;
+    const json: PocketGetResponse = await data.json()
     const feed = new Feed({
         title: "Pocket2Rss",
         description: "Saved pocket articles feed for you!!",
@@ -77,8 +73,7 @@ app.get("/rss", async (c) => {
         language: "ja"
     })
 
-    const values = Object.values(list)
-
+    const values = Object.values(json.list)
     values.forEach((v) => {
         feed.addItem({
             title: v.resolved_title,
